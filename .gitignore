@@ -9,3 +9,4 @@
 *.ipr
 *~
 *.swp
+.DS_Store
