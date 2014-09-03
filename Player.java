@@ -27,7 +27,7 @@ public class Player {
         int bestValue = Integer.MIN_VALUE;
         GameState bestState = lNextStates.get(0);
         for (GameState state : lNextStates) {
-            int value = miniMax(state, 30, true);
+            int value = miniMax(state, 5, true);
             if (value > bestValue) {
                 bestValue = value;
                 bestState = state;
@@ -37,26 +37,38 @@ public class Player {
     }
 
     private int heuristicValue(GameState whiteState, boolean player1) {
-        GameState state = null;
+        GameState state;
         if (player1)
             state = whiteState;
         else
-            state = state.reversed();
+            state = whiteState.reversed();
         if (state.isWhiteWin())
             return Integer.MAX_VALUE;
         if (state.isRedWin())
             return Integer.MIN_VALUE;
+        if (state.isDraw())
+            return 0;
 
-        return 0;
+        int redPieces = 0;
+        int whitePieces = 0;
+        for (int i = 1; i <= state.cSquares; i++) {
+            int cellValue = state.get(i);
+            if ((cellValue & Constants.CELL_RED) != 0)
+                redPieces++;
+            if ((cellValue & Constants.CELL_WHITE) != 0)
+                redPieces++;
+        }
+        return redPieces - whitePieces;
     }
 
     private int miniMax (GameState node, int depth, boolean maximizing) {
         if (depth == 0 || node.isEOG())
             return heuristicValue(node, maximizing); // Heuristic value of node (state)
         int bestValue;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
         if (maximizing) {
             bestValue = Integer.MIN_VALUE;
-            Vector<GameState> children = new Vector<GameState>();
             for (GameState child : children) {
                 int val = miniMax(child, depth - 1, false);
                 bestValue = Math.max(bestValue, val);
@@ -64,7 +76,6 @@ public class Player {
             return bestValue;
         } else {
             bestValue = Integer.MAX_VALUE;
-            Vector<GameState> children = new Vector<GameState>();
             for (GameState child : children) {
                 int val = miniMax(child, depth - 1, true);
                 bestValue = Math.min(bestValue, val);
