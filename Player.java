@@ -22,22 +22,22 @@ public class Player {
         /**
          * Select best next state based on the minimax algorithm
          */
-//        int bestValue = Integer.MIN_VALUE;
+        int bestValue = Integer.MIN_VALUE;
         GameState bestState = lNextStates.get(0);
-        int bestValue = miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-//        for (GameState state : lNextStates) {
-//            int value = miniMax(state, 9, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
-//            if (value == bestValue) {
-//                bestValue = value;
-//                bestState = state;
-//                break;
-//            }
-//        }
+        for (GameState state : lNextStates) {
+            int value = miniMax(state, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+            if (value > bestValue) {
+                bestValue = value;
+                bestState = state;
+                break;
+            }
+        }
 
-        System.err.println("Best value: " + bestValue);
-        System.err.println("Minimax from root value: " + miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true));
-        System.err.println("Number of white pawns: " + numberOfType(bestState, Constants.CELL_WHITE));
-        System.err.println("Number of white kings: " + numberOfType(bestState, Constants.CELL_WHITE | Constants.CELL_KING));
+//        System.err.println("Best value: " + bestValue);
+//        System.err.println("Minimax from root value: " + miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true));
+//        System.err.println("Number of white pawns: " + numberOfType(bestState, Constants.CELL_WHITE));
+//        System.err.println("Number of white kings: " + numberOfType(bestState, Constants.CELL_WHITE | Constants.CELL_KING));
+        miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
         return bestState;
     }
 
