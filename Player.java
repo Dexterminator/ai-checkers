@@ -1,5 +1,3 @@
-import org.omg.CORBA.CODESET_INCOMPATIBLE;
-
 import java.util.*;
 
 public class Player {
@@ -21,48 +19,46 @@ public class Player {
             // Must play "pass" move if there are no other moves possible.
             return new GameState(pState, new Move());
         }
-
         /**
-         * Here you should write your algorithms to get the best next move, i.e.
-         * the best next state. This skeleton returns a random move instead.
+         * Select best next state based on the minimax algorithm
          */
-        int bestValue = Integer.MIN_VALUE;
+//        int bestValue = Integer.MIN_VALUE;
         GameState bestState = lNextStates.get(0);
-        for (GameState state : lNextStates) {
-            int value = miniMax(state, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-            if (value > bestValue) {
-                bestValue = value;
-                bestState = state;
-            }
-        }
+        int bestValue = miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+//        for (GameState state : lNextStates) {
+//            int value = miniMax(state, 9, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+//            if (value == bestValue) {
+//                bestValue = value;
+//                bestState = state;
+//                break;
+//            }
+//        }
+
+        System.err.println("Best value: " + bestValue);
+        System.err.println("Minimax from root value: " + miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true));
+        System.err.println("Number of white pawns: " + numberOfType(bestState, Constants.CELL_WHITE));
+        System.err.println("Number of white kings: " + numberOfType(bestState, Constants.CELL_WHITE | Constants.CELL_KING));
         return bestState;
     }
 
     private int heuristicValue(GameState state) {
         if (state.isWhiteWin()) {
-            System.err.println("White win!");
             return Integer.MAX_VALUE;
         }
         if (state.isRedWin()) {
-            System.err.println("Red win!");
             return Integer.MIN_VALUE;
         }
         if (state.isDraw()) {
-            System.err.println("Draw!");
             return Integer.MIN_VALUE + 1;
         }
 
-        int redPieces = numberOfType(state, Constants.CELL_RED);
-        int whitePieces = numberOfType(state, Constants.CELL_WHITE);
-        int redKings = numberOfType(state, Constants.CELL_RED & Constants.CELL_KING);
-        int whiteKings = numberOfType(state, Constants.CELL_WHITE & Constants.CELL_KING);
+        int redPawns = numberOfType(state, Constants.CELL_RED);
+        int whitePawns = numberOfType(state, Constants.CELL_WHITE);
+        int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
+        int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
 
-//        System.err.println("Number of white pieces: " + whitePieces);
-//        System.err.println("Number of red pieces: " + redPieces);
-//        System.err.println("Number of white kings: " + whiteKings);
-
-        int redValue = redPieces + redKings;
-        int whiteValue = whitePieces + whiteKings;
+        int redValue = redPawns + redKings * 2;
+        int whiteValue = whitePawns + whiteKings * 2;
 
         return whiteValue - redValue;
     }
@@ -74,15 +70,15 @@ public class Player {
         node.findPossibleMoves(children);
         if (maximizing) {
             for (GameState child : children) {
-                alpha = miniMax(child, depth - 1, alpha, beta, false);
+                alpha = Math.max(alpha, miniMax(child, depth - 1, alpha, beta, false));
                 if (beta <= alpha)
                     break;
             }
             return alpha;
         } else {
             for (GameState child : children) {
-                beta = miniMax(child, depth - 1, alpha, beta, true);
-                if (beta >= alpha)
+                beta = Math.min(beta, miniMax(child, depth - 1, alpha, beta, true));
+                if (beta <= alpha)
                     break;
             }
             return beta;
@@ -93,7 +89,7 @@ public class Player {
         int count = 0;
         for (int i = 1; i <= state.cSquares; i++) {
             int cellValue = state.get(i);
-            if ((cellValue & type) != 0)
+            if (cellValue == type)
                 count++;
         }
         return count;
