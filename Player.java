@@ -59,8 +59,8 @@ public class Player {
         int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
         int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
 
-        int redValue = redPawns + redKings * 2;
-        int whiteValue = whitePawns + whiteKings * 2;
+        int redValue = redPawns * 2 + redKings * 3;
+        int whiteValue = whitePawns * 2 + whiteKings * 3;
 
         return whiteValue - redValue;
     }
