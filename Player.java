@@ -29,15 +29,9 @@ public class Player {
             if (value > bestValue) {
                 bestValue = value;
                 bestState = state;
-                break;
             }
         }
-
-//        System.err.println("Best value: " + bestValue);
-//        System.err.println("Minimax from root value: " + miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true));
-//        System.err.println("Number of white pawns: " + numberOfType(bestState, Constants.CELL_WHITE));
-//        System.err.println("Number of white kings: " + numberOfType(bestState, Constants.CELL_WHITE | Constants.CELL_KING));
-        miniMax(pState, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+        System.err.println("Best value: " + bestValue);
         return bestState;
     }
 
@@ -52,13 +46,13 @@ public class Player {
             return Integer.MIN_VALUE + 1;
         }
 
-        int redPawns = numberOfType(state, Constants.CELL_RED);
-        int whitePawns = numberOfType(state, Constants.CELL_WHITE);
-        int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
-        int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
+        int redPieces = numberOfType(state, Constants.CELL_RED);
+        int whitePieces = numberOfType(state, Constants.CELL_WHITE);
+        int redKings = numberOfType(state, Constants.CELL_RED & Constants.CELL_KING);
+        int whiteKings = numberOfType(state, Constants.CELL_WHITE & Constants.CELL_KING);
 
-        int redValue = redPawns + redKings * 2;
-        int whiteValue = whitePawns + whiteKings * 2;
+        int redValue = redPieces + redKings;
+        int whiteValue = whitePieces + whiteKings;
 
         return whiteValue - redValue;
     }
@@ -89,7 +83,7 @@ public class Player {
         int count = 0;
         for (int i = 1; i <= state.cSquares; i++) {
             int cellValue = state.get(i);
-            if (cellValue == type)
+            if ((cellValue & type) != 0)
                 count++;
         }
         return count;
