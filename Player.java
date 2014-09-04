@@ -1,3 +1,5 @@
+import org.omg.CORBA.CODESET_INCOMPATIBLE;
+
 import java.util.*;
 
 public class Player {
@@ -27,7 +29,7 @@ public class Player {
         int bestValue = Integer.MIN_VALUE;
         GameState bestState = lNextStates.get(0);
         for (GameState state : lNextStates) {
-            int value = miniMax(state, 5, true);
+            int value = miniMax(state, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
             if (value > bestValue) {
                 bestValue = value;
                 bestState = state;
@@ -36,51 +38,64 @@ public class Player {
         return bestState;
     }
 
-    private int heuristicValue(GameState whiteState, boolean player1) {
-        GameState state;
-        if (player1)
-            state = whiteState;
-        else
-            state = whiteState.reversed();
-        if (state.isWhiteWin())
+    private int heuristicValue(GameState state) {
+        if (state.isWhiteWin()) {
+            System.err.println("White win!");
             return Integer.MAX_VALUE;
-        if (state.isRedWin())
-            return Integer.MIN_VALUE;
-        if (state.isDraw())
-            return 0;
-
-        int redPieces = 0;
-        int whitePieces = 0;
-        for (int i = 1; i <= state.cSquares; i++) {
-            int cellValue = state.get(i);
-            if ((cellValue & Constants.CELL_RED) != 0)
-                redPieces++;
-            if ((cellValue & Constants.CELL_WHITE) != 0)
-                redPieces++;
         }
-        return redPieces - whitePieces;
+        if (state.isRedWin()) {
+            System.err.println("Red win!");
+            return Integer.MIN_VALUE;
+        }
+        if (state.isDraw()) {
+            System.err.println("Draw!");
+            return Integer.MIN_VALUE + 1;
+        }
+
+        int redPieces = numberOfType(state, Constants.CELL_RED);
+        int whitePieces = numberOfType(state, Constants.CELL_WHITE);
+        int redKings = numberOfType(state, Constants.CELL_RED & Constants.CELL_KING);
+        int whiteKings = numberOfType(state, Constants.CELL_WHITE & Constants.CELL_KING);
+
+//        System.err.println("Number of white pieces: " + whitePieces);
+//        System.err.println("Number of red pieces: " + redPieces);
+//        System.err.println("Number of white kings: " + whiteKings);
+
+        int redValue = redPieces + redKings;
+        int whiteValue = whitePieces + whiteKings;
+
+        return whiteValue - redValue;
     }
 
-    private int miniMax (GameState node, int depth, boolean maximizing) {
+    private int miniMax (GameState node, int depth, int alpha, int beta, boolean maximizing) {
         if (depth == 0 || node.isEOG())
-            return heuristicValue(node, maximizing); // Heuristic value of node (state)
-        int bestValue;
+            return heuristicValue(node);
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
         if (maximizing) {
-            bestValue = Integer.MIN_VALUE;
             for (GameState child : children) {
-                int val = miniMax(child, depth - 1, false);
-                bestValue = Math.max(bestValue, val);
+                alpha = miniMax(child, depth - 1, alpha, beta, false);
+                if (beta <= alpha)
+                    break;
             }
-            return bestValue;
+            return alpha;
         } else {
-            bestValue = Integer.MAX_VALUE;
             for (GameState child : children) {
-                int val = miniMax(child, depth - 1, true);
-                bestValue = Math.min(bestValue, val);
+                beta = miniMax(child, depth - 1, alpha, beta, true);
+                if (beta >= alpha)
+                    break;
             }
-            return bestValue;
+            return beta;
         }
+    }
+
+    private int numberOfType(GameState state, int type) {
+        int count = 0;
+        for (int i = 1; i <= state.cSquares; i++) {
+            int cellValue = state.get(i);
+            if ((cellValue & type) != 0)
+                count++;
+        }
+        return count;
     }
 }
