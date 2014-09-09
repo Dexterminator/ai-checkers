@@ -31,6 +31,8 @@ public class Player {
             // Must play "pass" move if there are no other moves possible.
             return new GameState(pState, new Move());
         }
+        if (children.size() == 1)
+            return children.firstElement();
 
         /**
          * Select best next state based on the negaMax algorithm
@@ -41,9 +43,11 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-        initZobrist();
-//        alphaBeta(pState, 9, NEG_INFINITY, INFINITY, 1);
-        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
+//        initZobrist();
+        alphaBeta(pState, 14, NEG_INFINITY, INFINITY, 1);
+//        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
+//        if (bestState == null)
+//            bestState = children.firstElement();
         return bestState;
     }
 
@@ -73,15 +77,15 @@ public class Player {
         int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
-        GameState bestChild = null;
+        GameState bestChild = children.get(0);
         for (GameState child : children) {
             int val = -alphaBeta(child, depth - 1, -beta, -alpha, -color);
-            if (val >= bestValue) {
+            if (val > bestValue) {
                 bestValue = val;
                 bestChild = child;
             }
             alpha = Math.max(alpha, val);
-            if (alpha > beta) {
+            if (alpha >= beta) {
                 break;
             }
         }
@@ -115,12 +119,12 @@ public class Player {
         GameState bestChild = null;
         for (GameState child : children) {
             int val = -alphaBetaZ(child, depth - 1, -beta, -alpha, -color);
-            if (val >= bestValue) {
+            if (val > bestValue) {
                 bestValue = val;
                 bestChild = child;
             }
             alpha = Math.max(alpha, val);
-            if (alpha > beta) {
+            if (alpha >= beta) {
                 break;
             }
         }
