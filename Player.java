@@ -43,9 +43,9 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-//        initZobrist();
-        alphaBeta(pState, 14, NEG_INFINITY, INFINITY, 1);
-//        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
+        initZobrist();
+//        alphaBeta(pState, 14, NEG_INFINITY, INFINITY, 1);
+        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
 //        if (bestState == null)
 //            bestState = children.firstElement();
         return bestState;
@@ -116,7 +116,7 @@ public class Player {
         int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
-        GameState bestChild = null;
+        GameState bestChild = children.get(0);
         for (GameState child : children) {
             int val = -alphaBetaZ(child, depth - 1, -beta, -alpha, -color);
             if (val > bestValue) {
