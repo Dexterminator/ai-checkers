@@ -3,6 +3,8 @@ import java.util.*;
 public class Player {
     boolean isRed = false;
     private GameState bestState;
+    private static final int INFINITY = Integer.MAX_VALUE;
+    private static final int NEG_INFINITY = -Integer.MAX_VALUE;
 
     /**
      * Performs a move
@@ -35,7 +37,7 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-        alphaBeta(pState, 12, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
+        alphaBeta(pState, 9, NEG_INFINITY, INFINITY, 1);
         return bestState;
     }
 
@@ -43,7 +45,7 @@ public class Player {
         if (depth == 0 || node.isEOG()) {
             return color * heuristicValue(node);
         }
-        int bestValue = Integer.MIN_VALUE;
+        int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
         GameState bestChild = null;
@@ -62,7 +64,7 @@ public class Player {
         if (depth == 0 || node.isEOG()) {
             return color * heuristicValue(node);
         }
-        int bestValue = -Integer.MAX_VALUE;
+        int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
         GameState bestChild = null;
@@ -126,13 +128,13 @@ public class Player {
             state = state.reversed();
 
         if (state.isWhiteWin()) {
-            return Integer.MAX_VALUE;
+            return INFINITY;
         }
         if (state.isRedWin()) {
-            return -Integer.MAX_VALUE;
+            return NEG_INFINITY;
         }
         if (state.isDraw()) {
-            return -Integer.MAX_VALUE + 1;
+            return NEG_INFINITY + 1;
         }
 
         int value = 0;
