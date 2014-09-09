@@ -35,7 +35,7 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-        alphaBeta(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
+        alphaBeta(pState, 12, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
         return bestState;
     }
 
