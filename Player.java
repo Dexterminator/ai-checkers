@@ -2,6 +2,8 @@ import java.util.*;
 
 public class Player {
     boolean isRed = false;
+    private GameState bestState;
+
     /**
      * Performs a move
      *
@@ -27,10 +29,37 @@ public class Player {
         /**
          * Select best next state based on the negaMax algorithm
          */
-        return negaMax(pState, 9, 1).state;
+//        System.err.println(alphaBeta(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).value);
+//        System.err.println(negaMax(pState, 9, 1).value);
+//        return negaMax2(pState, 9, 1).state;
+//        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
+//        bestState = null;
+        negaMax(pState, 9, 1);
+        return bestState;
     }
 
-    private NegaResult negaMax(GameState node, int depth, int color) {
+    private int negaMax(GameState node, int depth, int color) {
+        if (depth == 0 || node.isEOG()) {
+            return color * heuristicValue(node);
+        }
+        int bestValue = Integer.MIN_VALUE;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        GameState bestchild = null;
+        for (GameState child : children) {
+            int val = -negaMax(child, depth - 1, -color);
+            if (val >= bestValue) {
+                bestValue = val;
+                bestchild = child;
+            }
+        }
+        bestState = bestchild;
+        return bestValue;
+    }
+
+    
+
+    private NegaResult negaMax2(GameState node, int depth, int color) {
         if (depth == 0 || node.isEOG()) {
             return new NegaResult(null, color * heuristicValue(node));
         }
@@ -39,10 +68,32 @@ public class Player {
         node.findPossibleMoves(children);
         NegaResult bestRes = null;
         for (GameState child : children) {
-            int val = -negaMax(child, depth - 1, -color).value;
+            int val = -negaMax2(child, depth - 1, -color).value;
             if (val >= bestValue) {
                 bestValue = val;
                 bestRes = new NegaResult(child, val);
+            }
+        }
+        return bestRes;
+    }
+
+    private NegaResult alphaBeta2(GameState node, int depth, int alpha, int beta, int color) {
+        if (depth == 0 || node.isEOG()) {
+            return new NegaResult(null, color * heuristicValue(node));
+        }
+        int bestValue = -Integer.MAX_VALUE;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        NegaResult bestRes = new NegaResult(null, -Integer.MAX_VALUE);
+        for (GameState child : children) {
+            int val = -alphaBeta2(child, depth - 1, -beta, -alpha, -color).value;
+            if (val >= bestValue) {
+                bestValue = val;
+                bestRes = new NegaResult(child, val);
+            }
+            alpha = Math.max(alpha, val);
+            if (alpha >= beta) {
+                break;
             }
         }
         return bestRes;
