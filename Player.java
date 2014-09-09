@@ -34,7 +34,8 @@ public class Player {
 //        return negaMax2(pState, 9, 1).state;
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 //        bestState = null;
-        negaMax(pState, 9, 1);
+//        negaMax(pState, 9, 1);
+        alphaBeta(pState, 9, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
         return bestState;
     }
 
@@ -57,7 +58,28 @@ public class Player {
         return bestValue;
     }
 
-    
+    private int alphaBeta(GameState node, int depth, int alpha, int beta, int color) {
+        if (depth == 0 || node.isEOG()) {
+            return color * heuristicValue(node);
+        }
+        int bestValue = Integer.MIN_VALUE;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        GameState bestChild = null;
+        for (GameState child : children) {
+            int val = -alphaBeta(child, depth - 1, -beta, -alpha, -color);
+            if (val >= bestValue) {
+                bestValue = val;
+                bestChild = child;
+            }
+            alpha = Math.max(alpha, val);
+            if (alpha >= beta) {
+                break;
+            }
+        }
+        bestState = bestChild;
+        return bestValue;
+    }
 
     private NegaResult negaMax2(GameState node, int depth, int color) {
         if (depth == 0 || node.isEOG()) {
