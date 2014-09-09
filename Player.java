@@ -3,8 +3,12 @@ import java.util.*;
 public class Player {
     boolean isRed = false;
     private GameState bestState;
+    private int[][] zobrist = null;
+    private Random random = new Random ();
     private static final int INFINITY = Integer.MAX_VALUE;
     private static final int NEG_INFINITY = -Integer.MAX_VALUE;
+    enum Flag {UPPERBOUND, LOWERBOUND, EXACT}
+    HashMap<Integer, TranspositionTableEntry> transpositionTable = new HashMap<Integer, TranspositionTableEntry>();
 
     /**
      * Performs a move
@@ -37,7 +41,9 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-        alphaBeta(pState, 9, NEG_INFINITY, INFINITY, 1);
+        initZobrist();
+//        alphaBeta(pState, 9, NEG_INFINITY, INFINITY, 1);
+        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
         return bestState;
     }
 
@@ -83,6 +89,92 @@ public class Player {
         return bestValue;
     }
 
+    private int alphaBetaZ(GameState node, int depth, int alpha, int beta, int color) {
+        int alphaOrig = alpha;
+        int hash = getHash(node);
+        if (transpositionTable.containsKey(hash)) {
+            TranspositionTableEntry entry = transpositionTable.get(hash);
+            if (entry.depth >= depth) {
+                if (entry.flag == Flag.EXACT)
+                    return entry.value;
+                else if (entry.flag == Flag.LOWERBOUND)
+                    alpha = Math.max(alpha, entry.value);
+                else if (entry.flag == Flag.UPPERBOUND)
+                    beta = Math.min(beta, entry.value);
+                if (alpha >= beta)
+                    return entry.value;
+            }
+        }
+
+        if (depth == 0 || node.isEOG()) {
+            return color * heuristicValue(node);
+        }
+        int bestValue = NEG_INFINITY;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        GameState bestChild = null;
+        for (GameState child : children) {
+            int val = -alphaBetaZ(child, depth - 1, -beta, -alpha, -color);
+            if (val >= bestValue) {
+                bestValue = val;
+                bestChild = child;
+            }
+            alpha = Math.max(alpha, val);
+            if (alpha > beta) {
+                break;
+            }
+        }
+        TranspositionTableEntry newEntry = new TranspositionTableEntry();
+        newEntry.value = bestValue;
+        if (bestValue <= alphaOrig)
+            newEntry.flag = Flag.UPPERBOUND;
+        else if (bestValue >= beta)
+            newEntry.flag = Flag.LOWERBOUND;
+        else
+            newEntry.flag = Flag.EXACT;
+        newEntry.depth = depth;
+        transpositionTable.put(hash, newEntry);
+        bestState = bestChild;
+        return bestValue;
+    }
+
+    private void initZobrist () {
+        zobrist = new int [GameState.cSquares][4];
+        for (int i = 0; i < GameState.cSquares; i++){
+            for (int j = 0; j < 4; j++) {
+                zobrist[i][j] = random.nextInt();
+            }
+        }
+    }
+
+    private int getHash (GameState state) {
+        int hash = 0;
+        for (int i = 1; i <= state.cSquares; i++) {
+            int cellValue = state.get(i);
+            if (cellValue != 0) {
+                hash ^= zobrist[i-1][getPieceIndex(cellValue)];
+            }
+        }
+        return hash;
+    }
+
+    private int getPieceIndex(int type) {
+        int index = 0;
+        switch (type) {
+            case Constants.CELL_WHITE: index = 0;
+                break;
+            case Constants.CELL_WHITE | Constants.CELL_KING: index = 1;
+                break;
+            case Constants.CELL_RED: index = 2;
+                break;
+            case Constants.CELL_RED | Constants.CELL_KING: index = 3;
+                break;
+            default: System.exit(0);
+                break;
+        }
+        return index;
+
+    }
 //    private NegaResult negaMax2(GameState node, int depth, int color) {
 //        if (depth == 0 || node.isEOG()) {
 //            return new NegaResult(null, color * heuristicValue(node));
