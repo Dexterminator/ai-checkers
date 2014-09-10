@@ -3,7 +3,7 @@ import java.util.*;
 public class Player {
     boolean isRed = false;
     private GameState bestState;
-    private int[][] zobrist = null;
+    private long[][] zobrist = null;
     private Random random = new Random ();
     private static final int INFINITY = Integer.MAX_VALUE;
     private static final int NEG_INFINITY = -Integer.MAX_VALUE;
@@ -43,11 +43,11 @@ public class Player {
 //        return alphaBeta2(pState, 9, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1).state;
 
 //        negaMax(pState, 9, 1);
-        initZobrist();
-//        alphaBeta(pState, 14, NEG_INFINITY, INFINITY, 1);
-        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
-//        if (bestState == null)
-//            bestState = children.firstElement();
+//        transpositionTable.clear();
+//        initZobrist();
+        alphaBeta(pState, 11, NEG_INFINITY, INFINITY, 1);
+//        System.err.println(getHash(pState));
+//        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
         return bestState;
     }
 
@@ -143,10 +143,10 @@ public class Player {
     }
 
     private void initZobrist () {
-        zobrist = new int [GameState.cSquares][4];
+        zobrist = new long [GameState.cSquares][4];
         for (int i = 0; i < GameState.cSquares; i++){
             for (int j = 0; j < 4; j++) {
-                zobrist[i][j] = random.nextInt();
+                zobrist[i][j] = random.nextLong();
             }
         }
     }
@@ -233,19 +233,35 @@ public class Player {
             return NEG_INFINITY + 1;
         }
 
-        int value = 0;
+        int whitePawns = 0;
+        int redPawns = 0;
+        int whiteKings = 0;
+        int redKings = 0;
 
+        for (int i = 1; i <= state.cSquares; i++) {
+            int cellValue = state.get(i);
+            if (cellValue == Constants.CELL_WHITE)
+                whitePawns++;
+            else if (cellValue == Constants.CELL_RED)
+                redPawns++;
+            else if (cellValue == (Constants.CELL_WHITE | Constants.CELL_KING))
+                whiteKings++;
+            else if (cellValue == (Constants.CELL_RED | Constants.CELL_KING))
+                redKings++;
+        }
+        int value = (whitePawns * 2 + whiteKings * 3) - (redPawns * 2 + redKings * 3);
+        return value;
         // Pawn value
-        int whitePawns = numberOfType(state, Constants.CELL_WHITE);
-        value += getPawnValue(whitePawns);
-        int redPawns = numberOfType(state, Constants.CELL_RED);
-        value -= getPawnValue(redPawns);
-
-        // King value
-        int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
-        value += getKingValue(whiteKings);
-        int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
-        value -= getKingValue(redKings);
+//        int whitePawns = numberOfType(state, Constants.CELL_WHITE);
+//        value += getPawnValue(whitePawns);
+//        int redPawns = numberOfType(state, Constants.CELL_RED);
+//        value -= getPawnValue(redPawns);
+//
+//        // King value
+//        int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
+//        value += getKingValue(whiteKings);
+//        int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
+//        value -= getKingValue(redKings);
 
         // Safe pawn value
 //        int safeWhitePawns = safeNumberOfType(state, Constants.CELL_WHITE);
@@ -265,67 +281,67 @@ public class Player {
 //        int redPromotionDistance = totalPromotionDistance(state, Constants.CELL_RED);
 //        value += getPromotionDistanceValue(redPromotionDistance);
 
-        return value;
+
     }
 
-    private int getPawnValue(int numberOfPawns) {
-        return numberOfPawns * 2;
-    }
-
-    private int getKingValue (int numberOfKings) {
-        return numberOfKings * 3;
-    }
-
-    private int getSafePawnValue (int numberOfSafePawns) {
-        return numberOfSafePawns * 1;
-    }
-
-    private int getSafeKingValue (int numberOfSafeKings) {
-        return numberOfSafeKings * 1;
-    }
-
-    private int getPromotionDistanceValue (int promotionDistance) {
-        return promotionDistance * 3;
-    }
-
-    private int numberOfType(GameState state, int type) {
-        int count = 0;
-        for (int i = 1; i <= state.cSquares; i++) {
-            int cellValue = state.get(i);
-            if (cellValue == type)
-                count++;
-        }
-        return count;
-    }
-
-    private int safeNumberOfType(GameState state, int type) {
-        int count = 0;
-        for (int i = 1; i <= state.cSquares; i++) {
-            int cellValue = state.get(i);
-            if (cellValue == type && (state.cellToCol(i) == 0 || state.cellToCol(i) == 7
-                    || state.cellToRow(i) == 0 || state.cellToRow(i) == 7))
-                count++;
-        }
-        return count;
-    }
-
-    private int totalPromotionDistance (GameState state, int type) {
-        assert (type == Constants.CELL_RED || type == Constants.CELL_WHITE);
-        int distance = 0;
-        for (int i = 1; i <= state.cSquares; i++) {
-            int cellValue = state.get(i);
-            if (cellValue == type)
-                distance += promotionDistance(state, i, type);
-        }
-        return distance;
-    }
-
-    private int promotionDistance (GameState state, int cell, int type) {
-        if (type == Constants.CELL_WHITE) {
-            return state.cellToRow(cell);
-        } else {
-            // Red pawn
-            return 7 - state.cellToRow(cell);
-        }
-    }
+//    private int getPawnValue(int numberOfPawns) {
+//        return numberOfPawns * 2;
+//    }
+//
+//    private int getKingValue (int numberOfKings) {
+//        return numberOfKings * 3;
+//    }
+//
+//    private int getSafePawnValue (int numberOfSafePawns) {
+//        return numberOfSafePawns * 1;
+//    }
+//
+//    private int getSafeKingValue (int numberOfSafeKings) {
+//        return numberOfSafeKings * 1;
+//    }
+//
+//    private int getPromotionDistanceValue (int promotionDistance) {
+//        return promotionDistance * 3;
+//    }
+//
+//    private int numberOfType(GameState state, int type) {
+//        int count = 0;
+//        for (int i = 1; i <= state.cSquares; i++) {
+//            int cellValue = state.get(i);
+//            if (cellValue == type)
+//                count++;
+//        }
+//        return count;
+//    }
+//
+//    private int safeNumberOfType(GameState state, int type) {
+//        int count = 0;
+//        for (int i = 1; i <= state.cSquares; i++) {
+//            int cellValue = state.get(i);
+//            if (cellValue == type && (state.cellToCol(i) == 0 || state.cellToCol(i) == 7
+//                    || state.cellToRow(i) == 0 || state.cellToRow(i) == 7))
+//                count++;
+//        }
+//        return count;
+//    }
+//
+//    private int totalPromotionDistance (GameState state, int type) {
+//        assert (type == Constants.CELL_RED || type == Constants.CELL_WHITE);
+//        int distance = 0;
+//        for (int i = 1; i <= state.cSquares; i++) {
+//            int cellValue = state.get(i);
+//            if (cellValue == type)
+//                distance += promotionDistance(state, i, type);
+//        }
+//        return distance;
+//    }
+//
+//    private int promotionDistance (GameState state, int cell, int type) {
+//        if (type == Constants.CELL_WHITE) {
+//            return state.cellToRow(cell);
+//        } else {
+//            // Red pawn
+//            return 7 - state.cellToRow(cell);
+//        }
+//    }
 }
