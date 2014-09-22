@@ -5,10 +5,10 @@ public class Player {
     private GameState bestState;
     private long[][] zobrist = null;
     private Random random = new Random ();
-    private static final int INFINITY = Integer.MAX_VALUE;
-    private static final int NEG_INFINITY = -Integer.MAX_VALUE;
+    private static final int INFINITY = 1000000;
+    private static final int NEG_INFINITY = -1000000;
     enum Flag {UPPERBOUND, LOWERBOUND, EXACT}
-    HashMap<Integer, TranspositionTableEntry> transpositionTable = new HashMap<Integer, TranspositionTableEntry>();
+    HashMap<Long, TranspositionTableEntry> transpositionTable = new HashMap<Long, TranspositionTableEntry>();
 
     /**
      * Performs a move
@@ -31,8 +31,8 @@ public class Player {
             // Must play "pass" move if there are no other moves possible.
             return new GameState(pState, new Move());
         }
-        if (children.size() == 1)
-            return children.firstElement();
+//        if (children.size() == 1)
+//            return children.firstElement();
 
         /**
          * Select best next state based on the negaMax algorithm
@@ -45,23 +45,24 @@ public class Player {
 //        negaMax(pState, 9, 1);
 //        transpositionTable.clear();
 //        initZobrist();
-        alphaBeta(pState, 11, NEG_INFINITY, INFINITY, 1);
+        alphaBeta(pState, 11, -Integer.MAX_VALUE, Integer.MAX_VALUE, 1);
 //        System.err.println(getHash(pState));
-//        alphaBetaZ(pState, 11, NEG_INFINITY, INFINITY, 1);
+//        alphaBetaZ(pState, 16, NEG_INFINITY, INFINITY, 1);
         return bestState;
+//        return alphaBeta2(pState, 11, NEG_INFINITY, INFINITY, 1).state;
     }
 
     private int negaMax(GameState node, int depth, int color) {
         if (depth == 0 || node.isEOG()) {
-            return color * heuristicValue(node);
+            return color * heuristicValue(node, depth);
         }
         int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
-        GameState bestChild = null;
+        GameState bestChild = children.get(0);
         for (GameState child : children) {
             int val = -negaMax(child, depth - 1, -color);
-            if (val >= bestValue) {
+            if (val > bestValue) {
                 bestValue = val;
                 bestChild = child;
             }
@@ -72,9 +73,9 @@ public class Player {
 
     private int alphaBeta(GameState node, int depth, int alpha, int beta, int color) {
         if (depth == 0 || node.isEOG()) {
-            return color * heuristicValue(node);
+            return color * heuristicValue(node, depth);
         }
-        int bestValue = NEG_INFINITY;
+        int bestValue = -Integer.MAX_VALUE;
         Vector<GameState> children = new Vector<GameState>();
         node.findPossibleMoves(children);
         GameState bestChild = children.get(0);
@@ -95,7 +96,7 @@ public class Player {
 
     private int alphaBetaZ(GameState node, int depth, int alpha, int beta, int color) {
         int alphaOrig = alpha;
-        int hash = getHash(node);
+        long hash = getHash(node);
         if (transpositionTable.containsKey(hash)) {
             TranspositionTableEntry entry = transpositionTable.get(hash);
             if (entry.depth >= depth) {
@@ -111,7 +112,7 @@ public class Player {
         }
 
         if (depth == 0 || node.isEOG()) {
-            return color * heuristicValue(node);
+            return color * heuristicValue(node, depth);
         }
         int bestValue = NEG_INFINITY;
         Vector<GameState> children = new Vector<GameState>();
@@ -151,8 +152,8 @@ public class Player {
         }
     }
 
-    private int getHash (GameState state) {
-        int hash = 0;
+    private long getHash (GameState state) {
+        long hash = 0;
         for (int i = 1; i <= state.cSquares; i++) {
             int cellValue = state.get(i);
             if (cellValue != 0) {
@@ -179,58 +180,58 @@ public class Player {
         return index;
 
     }
-//    private NegaResult negaMax2(GameState node, int depth, int color) {
-//        if (depth == 0 || node.isEOG()) {
-//            return new NegaResult(null, color * heuristicValue(node));
-//        }
-//        int bestValue = Integer.MIN_VALUE;
-//        Vector<GameState> children = new Vector<GameState>();
-//        node.findPossibleMoves(children);
-//        NegaResult bestRes = null;
-//        for (GameState child : children) {
-//            int val = -negaMax2(child, depth - 1, -color).value;
-//            if (val >= bestValue) {
-//                bestValue = val;
-//                bestRes = new NegaResult(child, val);
-//            }
-//        }
-//        return bestRes;
-//    }
-//
-//    private NegaResult alphaBeta2(GameState node, int depth, int alpha, int beta, int color) {
-//        if (depth == 0 || node.isEOG()) {
-//            return new NegaResult(null, color * heuristicValue(node));
-//        }
-//        int bestValue = -Integer.MAX_VALUE;
-//        Vector<GameState> children = new Vector<GameState>();
-//        node.findPossibleMoves(children);
-//        NegaResult bestRes = new NegaResult(null, -Integer.MAX_VALUE);
-//        for (GameState child : children) {
-//            int val = -alphaBeta2(child, depth - 1, -beta, -alpha, -color).value;
-//            if (val >= bestValue) {
-//                bestValue = val;
-//                bestRes = new NegaResult(child, val);
-//            }
-//            alpha = Math.max(alpha, val);
-//            if (alpha >= beta) {
-//                break;
-//            }
-//        }
-//        return bestRes;
-//    }
+    private NegaResult negaMax2(GameState node, int depth, int color) {
+        if (depth == 0 || node.isEOG()) {
+            return new NegaResult(null, color * heuristicValue(node, depth));
+        }
+        int bestValue = Integer.MIN_VALUE;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        NegaResult bestRes = new NegaResult(children.get(0), bestValue);
+        for (GameState child : children) {
+            int val = -negaMax2(child, depth - 1, -color).value;
+            if (val > bestValue) {
+                bestValue = val;
+                bestRes = new NegaResult(child, val);
+            }
+        }
+        return bestRes;
+    }
+    //
+    private NegaResult alphaBeta2(GameState node, int depth, int alpha, int beta, int color) {
+        if (depth == 0 || node.isEOG()) {
+            return new NegaResult(null, color * heuristicValue(node, depth));
+        }
+        int bestValue = NEG_INFINITY;
+        Vector<GameState> children = new Vector<GameState>();
+        node.findPossibleMoves(children);
+        NegaResult bestRes = new NegaResult(children.get(0), NEG_INFINITY);
+        for (GameState child : children) {
+            int val = -alphaBeta2(child, depth - 1, -beta, -alpha, -color).value;
+            if (val > bestValue) {
+                bestValue = val;
+                bestRes = new NegaResult(child, val);
+            }
+            alpha = Math.max(alpha, val);
+            if (alpha >= beta) {
+                break;
+            }
+        }
+        return bestRes;
+    }
 
-    private int heuristicValue(GameState state) {
+    private int heuristicValue(GameState state, int depth) {
         if (isRed)
             state = state.reversed();
 
         if (state.isWhiteWin()) {
-            return INFINITY;
+            return INFINITY * depth;
         }
         if (state.isRedWin()) {
-            return NEG_INFINITY;
+            return NEG_INFINITY * depth;
         }
         if (state.isDraw()) {
-            return NEG_INFINITY + 1;
+            return 0;
         }
 
         int whitePawns = 0;
@@ -249,99 +250,8 @@ public class Player {
             else if (cellValue == (Constants.CELL_RED | Constants.CELL_KING))
                 redKings++;
         }
-        int value = (whitePawns * 2 + whiteKings * 3) - (redPawns * 2 + redKings * 3);
+        int value = (whitePawns + whiteKings * 3) - (redPawns + redKings * 3);
         return value;
-        // Pawn value
-//        int whitePawns = numberOfType(state, Constants.CELL_WHITE);
-//        value += getPawnValue(whitePawns);
-//        int redPawns = numberOfType(state, Constants.CELL_RED);
-//        value -= getPawnValue(redPawns);
-//
-//        // King value
-//        int whiteKings = numberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
-//        value += getKingValue(whiteKings);
-//        int redKings = numberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
-//        value -= getKingValue(redKings);
-
-        // Safe pawn value
-//        int safeWhitePawns = safeNumberOfType(state, Constants.CELL_WHITE);
-//        value += getSafePawnValue(safeWhitePawns);
-//        int safeRedPawns = safeNumberOfType(state, Constants.CELL_RED);
-//        value -= getSafePawnValue(safeRedPawns);
-//
-//        // Safe king value
-//        int safeWhiteKings = safeNumberOfType(state, Constants.CELL_WHITE | Constants.CELL_KING);
-//        value += getSafeKingValue(safeWhiteKings);
-//        int safeRedKings = safeNumberOfType(state, Constants.CELL_RED | Constants.CELL_KING);
-//        value -= getSafeKingValue(safeRedKings);
-
-        // Promotion distance value
-//        int whitePromotionDistance = totalPromotionDistance(state, Constants.CELL_WHITE);
-//        value -= getPromotionDistanceValue(whitePromotionDistance);
-//        int redPromotionDistance = totalPromotionDistance(state, Constants.CELL_RED);
-//        value += getPromotionDistanceValue(redPromotionDistance);
-
-
     }
 
-//    private int getPawnValue(int numberOfPawns) {
-//        return numberOfPawns * 2;
-//    }
-//
-//    private int getKingValue (int numberOfKings) {
-//        return numberOfKings * 3;
-//    }
-//
-//    private int getSafePawnValue (int numberOfSafePawns) {
-//        return numberOfSafePawns * 1;
-//    }
-//
-//    private int getSafeKingValue (int numberOfSafeKings) {
-//        return numberOfSafeKings * 1;
-//    }
-//
-//    private int getPromotionDistanceValue (int promotionDistance) {
-//        return promotionDistance * 3;
-//    }
-//
-//    private int numberOfType(GameState state, int type) {
-//        int count = 0;
-//        for (int i = 1; i <= state.cSquares; i++) {
-//            int cellValue = state.get(i);
-//            if (cellValue == type)
-//                count++;
-//        }
-//        return count;
-//    }
-//
-//    private int safeNumberOfType(GameState state, int type) {
-//        int count = 0;
-//        for (int i = 1; i <= state.cSquares; i++) {
-//            int cellValue = state.get(i);
-//            if (cellValue == type && (state.cellToCol(i) == 0 || state.cellToCol(i) == 7
-//                    || state.cellToRow(i) == 0 || state.cellToRow(i) == 7))
-//                count++;
-//        }
-//        return count;
-//    }
-//
-//    private int totalPromotionDistance (GameState state, int type) {
-//        assert (type == Constants.CELL_RED || type == Constants.CELL_WHITE);
-//        int distance = 0;
-//        for (int i = 1; i <= state.cSquares; i++) {
-//            int cellValue = state.get(i);
-//            if (cellValue == type)
-//                distance += promotionDistance(state, i, type);
-//        }
-//        return distance;
-//    }
-//
-//    private int promotionDistance (GameState state, int cell, int type) {
-//        if (type == Constants.CELL_WHITE) {
-//            return state.cellToRow(cell);
-//        } else {
-//            // Red pawn
-//            return 7 - state.cellToRow(cell);
-//        }
-//    }
 }
